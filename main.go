@@ -2,6 +2,9 @@ package main
 
 import (
 	"go-rest-api/config"
+	"go-rest-api/models"
+	"go-rest-api/routes"
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,10 +16,18 @@ func init() {
 
 func main() {
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+
+	if err := config.DB.AutoMigrate(&models.User{}); err != nil {
+		log.Fatal("Migration failed: ", err)
+	}
+	
+	api := r.Group("/api")
+	// Auth Routes
+	routes.AuthRoutes(api)
+	// User Routes
+	routes.UserRoutes(api)
+	// Todo Routes
+	routes.BlogRoutes(api)
+
 	r.Run()
 }
