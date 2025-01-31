@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -85,13 +84,9 @@ func Protect() gin.HandlerFunc {
 		token, err := jwt.Parse(tokenString, func (token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
-		
-		
-		log.Println(err)
 
-
-		if !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Unauthorized123"})
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Unauthorized"})
 			c.Abort()
 			return
 		}
@@ -99,7 +94,6 @@ func Protect() gin.HandlerFunc {
 		claims := token.Claims.(jwt.MapClaims)
 		userID := uint(claims["user_id"].(float64))
 		c.Set("userID", userID)
-
 		c.Next()
 	}
 }
