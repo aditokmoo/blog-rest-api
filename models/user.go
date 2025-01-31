@@ -9,4 +9,5 @@ type User struct {
 	Password   		string `json:"-"`
 	Confirmed  		bool   `json:"confirmed" gorm:"default:false"`
 	ConfirmToken 	string `json:"-"`
+	Blogs        	[]Blog `gorm:"foreignKey:UserID"`
 }

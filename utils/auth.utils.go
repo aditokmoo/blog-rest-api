@@ -4,21 +4,28 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/gomail.v2"
 )
+
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
+
 func CheckPassword(hashedPassword, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
 }
+
 func CreateJWT(userID uint) (string, error) {
 	payload := jwt.MapClaims{
 		"user_id": userID,
@@ -29,11 +36,13 @@ func CreateJWT(userID uint) (string, error) {
 
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
+
 func GenerateConfirmToken() string {
 	b := make([]byte, 20)
 	rand.Read(b)
 	return hex.EncodeToString(b)
 }
+
 func SendConfirmationMail(email, token string) error {
 	from := os.Getenv("SMTP_USER")
 	password := os.Getenv("SMTP_PASS")
@@ -60,4 +69,37 @@ func SendConfirmationMail(email, token string) error {
 	}
 
 	return nil
+}
+
+func Protect() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Unauthorized"})
+			c.Abort();
+			return
+		}
+
+		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+		
+		token, err := jwt.Parse(tokenString, func (token *jwt.Token) (interface{}, error) {
+			return []byte(os.Getenv("JWT_SECRET")), nil
+		})
+		
+		
+		log.Println(err)
+
+
+		if !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Unauthorized123"})
+			c.Abort()
+			return
+		}
+
+		claims := token.Claims.(jwt.MapClaims)
+		userID := uint(claims["user_id"].(float64))
+		c.Set("userID", userID)
+
+		c.Next()
+	}
 }
