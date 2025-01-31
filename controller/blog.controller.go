@@ -39,9 +39,26 @@ func CreateBlog(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Blog created", "data": blog})
 }
 
-func GetBlogs(c *gin.Context) {}
+func GetBlogs(c *gin.Context) {
+	var blogs []models.Blog
+	if err := config.DB.Preload("User").Find(&blogs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to get blogs"})
+		return
+	}
 
-func GetBlog(c *gin.Context) {}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": blogs})
+}
+
+func GetBlog(c *gin.Context) {
+	userID := c.Param("id")
+
+	var blog []models.Blog
+	if err := config.DB.First(&blog, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Blog not found"})
+		return	
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": blog})
+}
 
 func UpdateBlog(c *gin.Context) {}
 

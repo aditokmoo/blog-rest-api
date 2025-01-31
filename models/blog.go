@@ -5,5 +5,5 @@ type Blog struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
 	UserID  uint   `json:"user_id"`
-	User    User   `gorm:"constraint:OnDelete:CASCADE;" json:"-"`
+	User    User   `json:"User" gorm:"foreignKey:UserID"`
 }
