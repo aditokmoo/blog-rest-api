@@ -11,4 +11,5 @@ func AuthRoutes(r *gin.RouterGroup) {
 
 	authRoutes.POST("/register", controller.Register)
 	authRoutes.POST("/login", controller.Login)
+	authRoutes.GET("/verify/:confirmToken", controller.VerifyAccount)
 }

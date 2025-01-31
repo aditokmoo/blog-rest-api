@@ -42,10 +42,9 @@ func SendConfirmationMail(email, token string) error {
 
 	subject := "Please Confirm Your Registration"
 	body := fmt.Sprintf(
-		`<h1>Confirm Your Registration</h1>
+		"%s", `<h1>Confirm Your Registration</h1>
 		<p>Click the link below to confirm your registration:</p>
-		<a href="https://your-app.com/confirm?token=%s">Confirm your registration</a>`,
-		token,
+		<a href=`+os.Getenv("HOST")+`/api/auth/verify/`+token+`>Confirm your registration</a>`,
 	)
 
 	m := gomail.NewMessage()

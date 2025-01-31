@@ -70,3 +70,23 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	log.Println("Login Controller")
 }
+
+func VerifyAccount(c *gin.Context) {
+	confirmToken := c.Param("confirmToken")
+
+	var user models.User
+	if err := config.DB.Where("confirm_token = ?", confirmToken).First(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid token"})
+		return
+	}
+
+	user.Confirmed = true
+	user.ConfirmToken = ""
+	
+	if err := config.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to update user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Account verified"})
+}
